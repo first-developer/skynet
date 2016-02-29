@@ -127,7 +127,10 @@ Game.prototype.loop = function() {
 
 var g = new Game(this);
 
-
+var Virus = {};
+Virus.prototype.breakLinksFromAgentPos = function (pos) {
+    
+};
 
 // game loop
 g.loop();
