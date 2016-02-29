@@ -7,7 +7,7 @@ const SPACE_CHARACTER = " ";
  * Deug function
  * @param  {...Integer} items 
  */
-var d = function(...items) {
+var d = (...items) => {
     let logText = items.map((x) => JSON.stringify(x)).join(SPACE_CHARACTER);    
     printErr(logText);
 }
@@ -16,44 +16,40 @@ var d = function(...items) {
 /**
  * Node object
  */
-var Node = function(id, reachable) { 
-    this.id         = id || null;
-    this.reachable  = reachable || false 
+var Node = (id, reachable) => { 
+    this.id         = id        || null;
+    this.reachable  = reachable || false;
+    this.next       = new Set();
 }
-Node.prototype.isReachable = function() {
+Node.prototype.isReachable = () => {
     return this.reachable;
 }
-
-
-
-/**
- * Link object
- */
-var Link = function(N1, N2) {
-    this.N1 = N1;
-    this.N2 = N2;
+Node.prototype.linkTo = (N2) => {
+    this.next.add(N2);
+    return this;
 }
-
 
 
 /**
  * Game.JS
  */
-var Game = function(context, options) {
-    let opts = options === undefined ? {} : options;
+var Game = (context, options) => {
+    let opts    = options === undefined ? {} : options;
+    let entries = opts.entries || {};
     
     // Attributes 
-    this.N          = opts.N || null;       // the total number of nodes in the level, including the gateways
-    this.L          = opts.L || null;       // the number of links
-    this.E          = opts.E || null;       // the number of exit
+    this.N          = entries.N || null;       // the total number of nodes in the level, including the gateways
+    this.L          = entries.L || null;       // the number of links
+    this.E          = entries.E || null;       // the number of exit
     
-    this.nodes      = opts.nodes || null;   // the all nodes present in the game.
-    this.links      = opts.links || null;   // the links present in the game. 
+    this.nodes      = new Set(entries.nodes) || null;   // the all nodes present in the game.
+    this.links      = entries.links          || null;   // the links present in the game. 
+    this.gateways   = entries.gateways       || null;   // the list of gateways present in the game. 
     
     this.loopCount      = null;             // the number of game loop 
     this.agentPositions = [];               // The list of different positions taken by the Skynet agent.
     
-    let defaultInputReader = function(context) {
+    let defaultInputReader = (context) => {
         let ctx = context || this;
     
         return {
@@ -78,26 +74,26 @@ var Game = function(context, options) {
     this.console = opts.console || this.defaultInputReader(context);
 
     // Initializer 
-    let initialize = function() {
-        if ( !(this.N && this.L && this.E) ) {
-            let inputs = this.console.inputs();
-            this.N = inputs[0]; // the total number of nodes in the level, including the gateways
-            this.L = inputs[1]; // the number of links
-            this.E = inputs[2]; // the number of exit gateways    
-        }
+    let initialize = (entries) => {
+        if ( !entries.length ) { // No entries provided as options
+            // Assigning number of nodes, links and exit gateways
+            [this.N, this.L, this.E] = this.console.inputs();
+            d("Setting N,L,E", this);
         
-        if ( !(this.links && this.nodes) ) {
+            // Init nodes
+            this.nodes = new Set();
             for (var i = 0; i < this.L; i++) {
-                var inputs = g.console.inputs();
-                var N1 = inputs[0]; // N1 and N2 defines a link between these nodes
-                var N2 = inputs[1];
-                
+                let [N1, N2] = g.console.inputs();
+                let node = new Node(N1).LinkTo(N2);
+                d("Adding node", node)
+                this.nodes.add(node);    
             }
         }
         
         for (var i = 0; i < g.E; i++) {
             var EI = g.console.input(); // the index of a gateway node
             d("EI", EI);
+
         }
     }
     
