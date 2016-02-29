@@ -16,8 +16,8 @@ var d = (...items) => {
 /**
  * GNode object : Game Node
  */
-var GNode = function(id, reachable) { 
-    this.id         = id        || null;
+var GNode = function(id) { 
+    this.id         = id || null;
     this.next       = [];
 };
 
@@ -26,49 +26,60 @@ GNode.prototype.linkTo = function(N2) {
     return this;
 };
 
-
 /**
- * Game.JS
+ * Console
+ */
+var Console = function (context) {
+
+    /**
+     * Return the user intput as a single value
+     * @return {Integer} 
+     */
+    this.input = () => {
+        return parseInt(context.readline());    
+    };
+
+    /**
+     * Return the user intput as a list of values
+     * @return {Array[Integer]} 
+     */
+    this.inputs = () => {
+        return context.readline().split(SPACE_CHARACTER).map((x) => { return parseInt(x); });
+    };
+
+}
+    
+    
+/**
+ * Game
  */
 var Game = function(context, options) {
     let opts    = options === undefined ? {} : options;
-    let network = opts.network || {};   
     
     // Attributes 
-    this.hasEntriesProvidedAsOptions = (network.length) ? true : false
+    this.virus   = opts.virus   || null;
+    this.network = opts.network || null;
+    if( !this.virus || !this.network ) {
+        throw "MissingOptionValuesError: You must provide 'virus' and 'virus' as an options."    
+    }
     
     this.loopCount      = null;             // the number of game loop 
     this.agentPositions = [];               // The list of different positions taken by the Skynet agent.
     
-    let defaultInputReader = (context) => {
-        let ctx = context || this;
+    this.console = opts.console || new Console(context);
     
-        return {
-            /**
-             * Return the user intput as a single value
-             * @return {Integer} 
-             */
-            input:  () => {
-                return parseInt(ctx.readline());    
-            },
-
-            /**
-             * Return the user intput as a list of values
-             * @return {Array[Integer]} 
-             */
-            inputs: () => {
-                return ctx.readline().split(SPACE_CHARACTER).map((x) => { return parseInt(x); });
-            },
-        
-        }
-    }
-    this.console = opts.console || defaultInputReader(context);
+    d("console", this.console, "opts", opts);
+    
+    this.initialize(opts);
 };
 
+Game.prototype.initialize = function (options) {
+    this.network.initialize(this.console, options);
+    this.network.hasBeenInfectedBy(this.virus);
+}
 
-Game.prototype.loop = function() {
+Game.prototype.loop = function (virus, network) {
     this.initialize();
-    
     
     // Game loop
     while (true) {
@@ -95,13 +106,12 @@ var Network = function (options) {
     this.links    = opts.links    || null;  // the links present in the game. 
     
     this.gateways = new Set(opts.gateways) || null;  // the list of gateways present in the game. 
-    
-    this.console = opts.console || null // The Game console to get user inputs.
-    
-    this.initialize(options);
 }
-Network.prototype.initialize = function(options) {
-    d("[initialize] Start", this);
+
+Network.prototype.initialize = function(console, options) {
+    d("[initialize] Start", this, console, options);
+    
+    this.console = console || null; // The Game console to get user inputs.
 
     if ( this.hasAttrsProvidedAsOptions ) { // No Entries provided, try with user inputs.
         d("Already initialized through the given options values");
@@ -134,7 +144,7 @@ Network.prototype.initNodes = function () {
     for (let i = 0; i < this.N; i++) {
         let node = new GNode(i);
         this.nodes.push(node);
-        d("Adding node", node)    
+        d("Adding node", node);   
     }
     d("[initNodes] Done", this.nodes);
 }
@@ -145,7 +155,7 @@ Network.prototype.initLinks = function () {
         let [N1, N2] = this.console.inputs();
         
         let node = this.nodes[N1];
-        node.linkTo(N2)
+        node.linkTo(N2);
         d("Linking Node["+N2+"] to node", node);    
     }
     d("[initGlobalConstants] Done", this);
@@ -179,7 +189,7 @@ Network.prototype.hasAnyGatewayAt = function(indice) {
  * 
  * @param  {Virus}  virus 
  */
-Network.hasBeenInfectedBy = function (virus) {
+Network.prototype.hasBeenInfectedBy = function (virus) {
     virus.infects(this);
 }
 
@@ -218,11 +228,11 @@ Virus.prototype.breakLinkAt = function (N1, N2) {
 }
 
 
-var virus   = new Virus();
-var network = new Network();
 
-
-var g = new Game(this);
+var g = new Game(this, {
+        virus:  new Virus(),
+        network: new Network()
+    });
 g.loop();
 
 
