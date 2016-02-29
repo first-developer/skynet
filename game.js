@@ -18,11 +18,11 @@ var d = (...items) => {
  */
 var Node = function(id, reachable) { 
     this.id         = id        || null;
-    this.next       = new Set();
+    this.next       = [];
 };
 
 Node.prototype.linkTo = function(N2) {
-    this.next.add(N2);
+    this.next.push(N2);
     return this;
 };
 
@@ -42,7 +42,7 @@ var Game = function(context, options) {
     this.L          = entries.L || null;       // the number of links
     this.E          = entries.E || null;       // the number of exit
     
-    this.nodes      = new Set(entries.nodes) || null;   // the all nodes present in the game.
+    this.nodes      = entries.nodes || null;   // the all nodes present in the game.
     this.links      = entries.links          || null;   // the links present in the game. 
     this.gateways   = entries.gateways       || null;   // the list of gateways present in the game. 
     
@@ -77,32 +77,44 @@ var Game = function(context, options) {
 Game.prototype.initialize = function() {
     let i;
     
+    d("Game initilizing the game", this);
     if ( !this.hasEntriesProvidedAsOptions ) { // No entries provided as options
         // Assigning number of nodes, links and exit gateways
         [this.N, this.L, this.E] = this.console.inputs();
         d("Setting N,L,E", this);
     
         // Init nodes
-        this.nodes = new Set();
+        this.nodes = [];
+        for (i = 0; i < this.N; i++) {
+            let node = new Node(i);
+            this.nodes.push(node);
+            d("Adding node", node)    
+        }
+        
+        // Init links
         for (i = 0; i < this.L; i++) {
             let [N1, N2] = g.console.inputs();
-            let node = new Node(N1);
-            this.nodes.add(node.linkTo(N2));
-            d("Adding node", node)    
+            
+            // get nodes
+            let node = this.nodes[N1];
+            node.linkTo(N2)
+            d("Linking Node["+N2+"] to node", node);    
         }
 
         // Init gateways
-        this.gateways = new Set();
+        this.gateways = [];
         for (i = 0; i < this.E; i++) {
             var EI = g.console.input(); // the index of a gateway node
             d("Adding gateway", EI);
-            this.gateways.add(EI);
+            this.gateways.push(EI);
         }
     }
+    d("Game initialized", this);
 };
 
 Game.prototype.loop = function() {
     this.initialize();
+    
     
     // Game loop
     while (true) {
@@ -119,3 +131,6 @@ var g = new Game(this);
 
 // game loop
 g.loop();
+
+
+
