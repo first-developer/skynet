@@ -79,8 +79,10 @@ Game.prototype.loop = function() {
     }
 }
 
-var g = new Game(this);
 
+/**
+ * Network
+ */
 var Network = {
     N: null;       // the total number of nodes in the level, including the gateways
     L: null;       // the number of links
@@ -155,12 +157,34 @@ Network.prototype.initGateways = function (console) {
     d("[initGateways] Done", this.gateways);
 }
 
-var Virus = {};
-Virus.prototype.breakLinksFromAgentPos = function (pos) {
+/**
+ * hasBeenInfectedBy : Allow to the virus the visit the class 
+ * Implements Visitor Design Pattern
+ * 
+ * @param  {Virus}  virus 
+ */
+Network.hasBeenInfectedBy = function (virus) {
+    virus.infects(this);
+}
 
+/**
+ * Virus
+ */
+var Virus = { 
+    infectedNetwork: null
+};
+Virus.prototype.infects = function (network) {
+    this.infectedNetwork = network;
+};
+Virus.prototype.breakLinksFromAgentPos = function (pos) {
+    let net = this.infectedNetwork;
+
+    
 };
 
-// game loop
+
+
+var g = new Game(this);
 g.loop();
 
 
