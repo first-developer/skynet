@@ -202,15 +202,15 @@ Network.prototype.checkGatewaysAt = function(indice1, indice2) {
 
 Network.prototype.checkLinkWithGatewayAt = function(indice) {
     d("[checkLinkWithGatewayAt] Start")
-    for (let i=0; i<this.E; i++) {
-        let leftLinkFound   = (this.links[indice][i] == 1);
-        let rightLinkFound  = (this.links[i][indice] == 1);
-        d("[checkLinkWithGatewayAt]"+"leftLinkFound="+leftLinkFound+" rightLinkFound="+rightLinkFound);
-        if ( !(leftLinkFound || leftLinkFound) ) {
-               
+    for (let gate of this.gateways) { // Loop through all gateways.        
+        let leftLinkFound   = (this.links[indice][gate] == 1);
+        let rightLinkFound  = (this.links[gate][indice] == 1);
+        d("[checkLinkWithGatewayAt]  gate="+gate+" index="+indice+" leftLinkFound="+leftLinkFound+" rightLinkFound="+rightLinkFound);
+        if ( !(leftLinkFound || rightLinkFound) ) {
+            d("Nothing yet to do");
         } else {
-            if (leftLinkFound ) { this.addBreakingLink(indice, i);  }
-            if (rightLinkFound) { this.addBreakingLink(i, indice); }
+            if (leftLinkFound ) { this.addBreakingLink(indice, gate);  }
+            if (rightLinkFound) { this.addBreakingLink(gate, indice); }
             break;
         }
     }
@@ -218,7 +218,8 @@ Network.prototype.checkLinkWithGatewayAt = function(indice) {
 
 Network.prototype.addBreakingLink = function(N1, N2) {
     d("Adding link", "N1="+N1+" N2="+N2)
-    this.breakingLinks.push([N1, N2]); 
+    //this.breakingLinks.push([N1, N2]); 
+    print([N1, N2].join(SPACE_CHARACTER));
 } 
 
 Network.prototype.removeBrokenLinks = function() {
@@ -272,7 +273,7 @@ Virus.prototype.breakNextLinks = function(lastIndice, next) {
     if (!next.length) {
         return    
     } else {
-        indice = next.shift();
+        indice = next.sort().shift();
         node   = net.nodes[indice];
         d("[Virus.breakNextLinks]", "indice", indice, "node", node); 
        
