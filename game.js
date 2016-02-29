@@ -106,7 +106,7 @@ Network.prototype.initialize = function(options) {
         
         this.nodes      = opts.nodes;
         this.links      = opts.links;
-        this.gateways   = opts.gateways;
+        this.gateways   = new Set(opts.gateways);
     } else { // No Entries provided, try with user inputs.
         this.initGlobalConstants();
         this.initNodes();
@@ -148,14 +148,25 @@ Network.prototype.initLinks = function (console) {
 
 Network.prototype.initGateways = function (console) {
     d("[initGateways] Start");
-    this.gateways = [];
+    this.gateways = new Set();
     for (i = 0; i < this.E; i++) {
         var EI = console.input(); // the index of a gateway node
         d("Adding gateway", EI);
-        this.gateways.push(EI);
+        this.gateways.add(EI);
     }
     d("[initGateways] Done", this.gateways);
 }
+
+/**
+ * Check if is ther any gateway at the given indice.
+ *
+ * @param  {Integer}  indice of the Node.
+ * @return {Boolean}  whether or not is the related Node is a Gateway.
+ */
+Network.prototype.hasAnyGatewayAt = function(indice) {
+    return this.gateways.has(indice);
+}
+
 
 /**
  * hasBeenInfectedBy : Allow to the virus the visit the class 
@@ -177,10 +188,28 @@ Virus.prototype.infects = function (network) {
     this.infectedNetwork = network;
 };
 Virus.prototype.breakLinksFromAgentPos = function (pos) {
-    let net = this.infectedNetwork;
+    let net;
 
-    
+    if (!this.infectedNetwork) { // No network infected
+        trow "MissingNetworkToInfectError: You nedd to infect a network first. use 'Virus.infect' method."
+    } else {
+        net = this.infectedNetwork;
+
+        let nextNodes = net.nodes[pos].next;
+        // Find all next Node that linked to a gateway.
+        nextNodes.forEach((indice) => {
+            let next = net.nodes[indice].next;
+            next.forEach((i) => {
+                if (net.hasAnyGatewayAt(i)) {
+                    this.BreakLinkAt(indice, i);
+                }    
+            })
+        });    
+    }
 };
+Virus.prototype.breakLinkAt = function (N1, N2) {
+    print [N1, N2].join(SPACE_CHARACTER);
+}
 
 
 
