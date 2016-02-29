@@ -90,7 +90,61 @@ var Network = {
     links: null;   // the links present in the game. 
     gateways: null;   // the list of gateways present in the game. 
 }
-Network.prototype.initialize
+Network.prototype.initialize = function(options) {
+    let i;
+
+    d("Init the network", this);
+
+    let opts = options || {};
+    this.hasEntriesProvidedAsOptions = (opts.length) ? true : false
+    
+    if ( this.hasEntriesProvidedAsOptions ) { // Entries are provided as options
+        d("Setting attributes for options", opts);
+        this.N = opts.N;       
+        this.L = opts.L;       
+        this.E = opts.E;       
+        
+        this.nodes      = opts.nodes;
+        this.links      = opts.links;
+        this.gateways   = opts.gateways;
+    } else { // No Entries provided, try with user inputs.
+        // Assigning number of nodes, links and exit gateways
+        this.initGlobalConstants();
+    
+        // Init nodes
+        this.nodes = [];
+        for (i = 0; i < this.N; i++) {
+            let node = new Node(i);
+            this.nodes.push(node);
+            d("Adding node", node)    
+        }
+        
+        // Init links
+        for (i = 0; i < this.L; i++) {
+            let [N1, N2] = g.console.inputs();
+            
+            // get nodes
+            let node = this.nodes[N1];
+            node.linkTo(N2)
+            d("Linking Node["+N2+"] to node", node);    
+        }
+
+        // Init gateways
+        this.gateways = [];
+        for (i = 0; i < this.E; i++) {
+            var EI = g.console.input(); // the index of a gateway node
+            d("Adding gateway", EI);
+            this.gateways.push(EI);
+        }
+    }
+    d("Network initialized", this);
+};
+
+Network.prototype.initGlobalConstants = function (console) {
+    d("[initGlobalConstants] Start");
+    [this.N, this.L, this.E] = console.inputs();
+    d("[initGlobalConstants] Done", this);
+}
 
 var Virus = {};
 Virus.prototype.breakLinksFromAgentPos = function (pos) {
