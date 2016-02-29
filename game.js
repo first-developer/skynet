@@ -83,33 +83,29 @@ Game.prototype.loop = function() {
 /**
  * Network
  */
-var Network = {
-    N: null,       // the total number of nodes in the level, including the gateways
-    L: null,       // the number of links
-    E: null,       // the number of exit
+var Network = function (options) {
+    let opts = options || {};
+    this.hasAttrsProvidedAsOptions = (opts.length) ? true : false
     
-    nodes: null,   // the all nodes present in the game.
-    links: null,   // the links present in the game. 
-    gateways: null,   // the list of gateways present in the game. 
+    this.N   = opts.N || null;       // the total number of nodes in the level, including the gateways
+    this.L   = opts.L || null;       // the number of links
+    this.E   = opts.E || null;       // the number of exit
+    
+    this.nodes    = opts.nodes    || null;  // the all nodes present in the game.
+    this.links    = opts.links    || null;  // the links present in the game. 
+    
+    this.gateways = new Set(opts.gateways) || null;  // the list of gateways present in the game. 
+    
+    this.console = opts.console || null // The Game console to get user inputs.
+    
+    this.initialize(options);
 }
 Network.prototype.initialize = function(options) {
     d("[initialize] Start", this);
 
-    let opts = options || {};
-    this.hasEntriesProvidedAsOptions = (opts.length) ? true : false
-    
-    this.console = opts.console || null // The Game console to get user inputs.
-    
-    if ( this.hasEntriesProvidedAsOptions ) { // Entries are provided as options
-        d("Setting attributes for options", opts);
-        this.N = opts.N;       
-        this.L = opts.L;       
-        this.E = opts.E;       
-        
-        this.nodes      = opts.nodes;
-        this.links      = opts.links;
-        this.gateways   = new Set(opts.gateways);
-    } else { // No Entries provided, try with user inputs.
+    if ( this.hasAttrsProvidedAsOptions ) { // No Entries provided, try with user inputs.
+        d("Already initialized through the given options values");
+    } else {
         if ( this.console ) {
             this.initGlobalConstants();
             this.initNodes();
@@ -223,6 +219,7 @@ Virus.prototype.breakLinkAt = function (N1, N2) {
 
 var virus   = new Virus();
 var network = new Network();
+
 
 var g = new Game(this);
 g.loop();
