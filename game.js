@@ -195,6 +195,7 @@ Network.prototype.hasBeenInfectedBy = function (virus) {
     virus.infects(this);
 }
 
+
 /**
  * Virus
  */
@@ -213,17 +214,32 @@ Virus.prototype.breakLinksFromAgentPos = function (pos) {
     } else {
         net = this.infectedNetwork;
 
-        let nextNodes = net.nodes[pos].next;
-        printErr("nextNodes="+nextNodes);
-        // Find all next Node that linked to a gateway.
-        nextNodes.forEach((indice) => {
-            printErr("indice="+indice);
-            if (net.hasAnyGatewayAt(indice)) {
-                this.breakLinkAt(indice, i);
-            }
-        });    
+        this.breakNextLinks(pos, [pos]);
     }
 };
+
+Virus.prototype.breakNextLinks = function(lastIndice, next) {
+    let indice, node;
+    
+    
+    let net = this.infectedNetwork;
+    
+    if (!next.length) {
+        return    
+    } else {
+        indice = next.shift();
+        node   = net.nodes[indice];
+        d("[Virus.breakNextLinks]", "indice", indice, "node", node); 
+        if (net.hasAnyGatewayAt(indice)) {
+            this.breakLinkAt(indice, lastIndice);
+        }
+        d("[Virus.breakNextLinks]", "lastIndice", lastIndice,"indice", 
+                indice, "net.hasAnyGatewayAt("+indice+")", net.hasAnyGatewayAt(indice), "next", next,"rest", node.next);    
+        this.breakNextLinks(indice, next);
+        this.breakNextLinks(indice, node.next);  
+    }
+}
+
 Virus.prototype.breakLinkAt = function (N1, N2) {
     let linkToRemove = [N1, N2].join(SPACE_CHARACTER);
     d("Link removed ", linkToRemove);
