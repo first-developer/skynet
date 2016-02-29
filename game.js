@@ -32,19 +32,10 @@ Node.prototype.linkTo = function(N2) {
  */
 var Game = function(context, options) {
     let opts    = options === undefined ? {} : options;
-    let entries = opts.entries || {};
-    
+    let network = opts.network || {};   
     
     // Attributes 
-    this.hasEntriesProvidedAsOptions = (entries.length) ? true : false
-    
-    this.N          = entries.N || null;       // the total number of nodes in the level, including the gateways
-    this.L          = entries.L || null;       // the number of links
-    this.E          = entries.E || null;       // the number of exit
-    
-    this.nodes      = entries.nodes || null;   // the all nodes present in the game.
-    this.links      = entries.links          || null;   // the links present in the game. 
-    this.gateways   = entries.gateways       || null;   // the list of gateways present in the game. 
+    this.hasEntriesProvidedAsOptions = (network.length) ? true : false
     
     this.loopCount      = null;             // the number of game loop 
     this.agentPositions = [];               // The list of different positions taken by the Skynet agent.
@@ -74,43 +65,6 @@ var Game = function(context, options) {
     this.console = opts.console || defaultInputReader(context);
 };
 
-Game.prototype.initialize = function() {
-    let i;
-    
-    d("Game initilizing the game", this);
-    if ( !this.hasEntriesProvidedAsOptions ) { // No entries provided as options
-        // Assigning number of nodes, links and exit gateways
-        [this.N, this.L, this.E] = this.console.inputs();
-        d("Setting N,L,E", this);
-    
-        // Init nodes
-        this.nodes = [];
-        for (i = 0; i < this.N; i++) {
-            let node = new Node(i);
-            this.nodes.push(node);
-            d("Adding node", node)    
-        }
-        
-        // Init links
-        for (i = 0; i < this.L; i++) {
-            let [N1, N2] = g.console.inputs();
-            
-            // get nodes
-            let node = this.nodes[N1];
-            node.linkTo(N2)
-            d("Linking Node["+N2+"] to node", node);    
-        }
-
-        // Init gateways
-        this.gateways = [];
-        for (i = 0; i < this.E; i++) {
-            var EI = g.console.input(); // the index of a gateway node
-            d("Adding gateway", EI);
-            this.gateways.push(EI);
-        }
-    }
-    d("Game initialized", this);
-};
 
 Game.prototype.loop = function() {
     this.initialize();
@@ -127,9 +81,20 @@ Game.prototype.loop = function() {
 
 var g = new Game(this);
 
+var Network = {
+    N: null;       // the total number of nodes in the level, including the gateways
+    L: null;       // the number of links
+    E: null;       // the number of exit
+    
+    nodes: null;   // the all nodes present in the game.
+    links: null;   // the links present in the game. 
+    gateways: null;   // the list of gateways present in the game. 
+}
+Network.prototype.initialize
+
 var Virus = {};
 Virus.prototype.breakLinksFromAgentPos = function (pos) {
-    
+
 };
 
 // game loop
