@@ -91,9 +91,7 @@ var Network = {
     gateways: null;   // the list of gateways present in the game. 
 }
 Network.prototype.initialize = function(options) {
-    let i;
-
-    d("Init the network", this);
+    d("[initialize] Start", this);
 
     let opts = options || {};
     this.hasEntriesProvidedAsOptions = (opts.length) ? true : false
@@ -108,42 +106,53 @@ Network.prototype.initialize = function(options) {
         this.links      = opts.links;
         this.gateways   = opts.gateways;
     } else { // No Entries provided, try with user inputs.
-        // Assigning number of nodes, links and exit gateways
         this.initGlobalConstants();
-    
-        // Init nodes
-        this.nodes = [];
-        for (i = 0; i < this.N; i++) {
-            let node = new Node(i);
-            this.nodes.push(node);
-            d("Adding node", node)    
-        }
-        
-        // Init links
-        for (i = 0; i < this.L; i++) {
-            let [N1, N2] = g.console.inputs();
-            
-            // get nodes
-            let node = this.nodes[N1];
-            node.linkTo(N2)
-            d("Linking Node["+N2+"] to node", node);    
-        }
-
-        // Init gateways
-        this.gateways = [];
-        for (i = 0; i < this.E; i++) {
-            var EI = g.console.input(); // the index of a gateway node
-            d("Adding gateway", EI);
-            this.gateways.push(EI);
-        }
+        this.initNodes();
+        this.initLinks(console);
+        this.initGateways(console);
     }
-    d("Network initialized", this);
+    
+    d("[initialize] Done", this);
 };
 
 Network.prototype.initGlobalConstants = function (console) {
     d("[initGlobalConstants] Start");
     [this.N, this.L, this.E] = console.inputs();
+    d("[initGlobalConstants] Done", "N="+this.N+" L="+this.L+" E="+this.E);
+}
+
+Network.prototype.initNodes = function () {
+    d("[initNodes] Start", this);
+    this.nodes = [];
+    for (let i = 0; i < this.N; i++) {
+        let node = new Node(i);
+        this.nodes.push(node);
+        d("Adding node", node)    
+    }
+    d("[initNodes] Done", this.nodes);
+}
+
+Network.prototype.initLinks = function (console) {
+    d("[initGlobalConstants] Start");
+    for (let i = 0; i < this.L; i++) {
+        let [N1, N2] = console.inputs();
+        
+        let node = this.nodes[N1];
+        node.linkTo(N2)
+        d("Linking Node["+N2+"] to node", node);    
+    }
     d("[initGlobalConstants] Done", this);
+}
+
+Network.prototype.initGateways = function (console) {
+    d("[initGateways] Start");
+    this.gateways = [];
+    for (i = 0; i < this.E; i++) {
+        var EI = console.input(); // the index of a gateway node
+        d("Adding gateway", EI);
+        this.gateways.push(EI);
+    }
+    d("[initGateways] Done", this.gateways);
 }
 
 var Virus = {};
