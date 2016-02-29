@@ -89,7 +89,8 @@ Game.prototype.loop = function () {
         var SI = this.console.input(); // The index of the node on which the Skynet agent is positioned this turn
         d("Skynet agent position", SI);
         
-        this.virus.breakLinksFromAgentPos(SI);
+        this.virus.MarkLinksAsBrockenWhenAgentMoveTo(SI);
+        this.network.removeBrokenLinks
     }
 }
 
@@ -109,6 +110,8 @@ var Network = function (options) {
     this.links    = opts.links    || null;  // the links present in the game. 
     
     this.gateways = new Set(opts.gateways) || null;  // the list of gateways present in the game. 
+    
+    this.breakingLinks = [];    // the links the virus should break. 
 }
 
 Network.prototype.initialize = function(console, options) {
@@ -142,8 +145,11 @@ Network.prototype.initGlobalConstants = function () {
 Network.prototype.initNodes = function () {
     d("[Network.initNodes] Start", this);
     this.nodes = [];
+    this.links = [];
     for (let i = 0; i < this.N; i++) {
         let node = new GNode(i);
+        
+        this.links[i] = [0,0];  
         
         d("Adding node", node); 
         this.nodes.push(node);  
@@ -158,7 +164,9 @@ Network.prototype.initLinks = function () {
         
         let node = this.nodes[N1];
         node.linkTo(N2);
-        d("Linking Node["+N2+"] to node", node);    
+        
+        this.links[N1][N2] = 1;
+        d("Linking Node["+N2+"] to node", node, "links["+N1+"]["+N2+"]", this.links[N1][N2]);    
     }
     d("[Network.initLinks] Done", this);
 }
@@ -181,8 +189,45 @@ Network.prototype.initGateways = function () {
  * @return {Boolean}  whether or not is the related Node is a Gateway.
  */
 Network.prototype.hasAnyGatewayAt = function(indice) {
+    d("[hasAnyGatewayAt] Start")
     return this.gateways.has(indice);
 }
+
+Network.prototype.checkGatewaysAt = function(indice1, indice2) {
+    d("[checkGatewaysAt] Start")
+    if( this.hasAnyGatewayAt(indice1) ){
+        this.addBreakingLink(indice1, indice2);   
+    }
+}
+
+Network.prototype.checkLinkWithGatewayAt = function(indice) {
+    d("[checkLinkWithGatewayAt] Start")
+    for (let i=0; i<this.E; i++) {
+        let leftLinkFound   = (this.links[indice][i] == 1);
+        let rightLinkFound  = (this.links[i][indice] == 1);
+        d("[checkLinkWithGatewayAt]"+"leftLinkFound="+leftLinkFound+" rightLinkFound="+rightLinkFound);
+        if ( !(leftLinkFound || leftLinkFound) ) {
+               
+        } else {
+            if (leftLinkFound ) { this.addBreakingLink(indice, i);  }
+            if (rightLinkFound) { this.addBreakingLink(i, indice); }
+            break;
+        }
+    }
+}
+
+Network.prototype.addBreakingLink = function(N1, N2) {
+    d("Adding link", "N1="+N1+" N2="+N2)
+    this.breakingLinks.push([N1, N2]); 
+} 
+
+Network.prototype.removeBrokenLinks = function() {
+    d("removing links", this.breakingLinks)
+    
+    for (let i=0; i<this.breakingLinks.length; i++) {
+        print(this.breakingLinks[i].join(SPACE_CHARACTER));   
+    }
+} 
 
 
 /**
@@ -206,7 +251,7 @@ var Virus = function () {
 Virus.prototype.infects = function (network) {
     this.infectedNetwork = network;
 };
-Virus.prototype.breakLinksFromAgentPos = function (pos) {
+Virus.prototype.MarkLinksAsBrockenWhenAgentMoveTo = function (pos) {
     let net;
 
     if (!this.infectedNetwork) { // No network infected
@@ -230,9 +275,10 @@ Virus.prototype.breakNextLinks = function(lastIndice, next) {
         indice = next.shift();
         node   = net.nodes[indice];
         d("[Virus.breakNextLinks]", "indice", indice, "node", node); 
-        if (net.hasAnyGatewayAt(indice)) {
-            this.breakLinkAt(indice, lastIndice);
-        }
+       
+        net.checkGatewaysAt(indice, lastIndice);
+        net.checkLinkWithGatewayAt(indice);
+        
         d("[Virus.breakNextLinks]", "lastIndice", lastIndice,"indice", 
                 indice, "net.hasAnyGatewayAt("+indice+")", net.hasAnyGatewayAt(indice), "next", next,"rest", node.next);    
         this.breakNextLinks(indice, next);
