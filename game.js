@@ -84,19 +84,21 @@ Game.prototype.loop = function() {
  * Network
  */
 var Network = {
-    N: null;       // the total number of nodes in the level, including the gateways
-    L: null;       // the number of links
-    E: null;       // the number of exit
+    N: null,       // the total number of nodes in the level, including the gateways
+    L: null,       // the number of links
+    E: null,       // the number of exit
     
-    nodes: null;   // the all nodes present in the game.
-    links: null;   // the links present in the game. 
-    gateways: null;   // the list of gateways present in the game. 
+    nodes: null,   // the all nodes present in the game.
+    links: null,   // the links present in the game. 
+    gateways: null,   // the list of gateways present in the game. 
 }
 Network.prototype.initialize = function(options) {
     d("[initialize] Start", this);
 
     let opts = options || {};
     this.hasEntriesProvidedAsOptions = (opts.length) ? true : false
+    
+    this.console = opts.console || null // The Game console to get user inputs.
     
     if ( this.hasEntriesProvidedAsOptions ) { // Entries are provided as options
         d("Setting attributes for options", opts);
@@ -108,13 +110,20 @@ Network.prototype.initialize = function(options) {
         this.links      = opts.links;
         this.gateways   = new Set(opts.gateways);
     } else { // No Entries provided, try with user inputs.
-        this.initGlobalConstants();
-        this.initNodes();
-        this.initLinks(console);
-        this.initGateways(console);
+        if ( this.console ) {
+            this.initGlobalConstants();
+            this.initNodes();
+            this.initLinks(console);
+            this.initGateways(console);    
+        } else {
+            throw "NoConsoleProvidedError: You must set the 'console' options to be able to get user inputs";   
+        }
+        
     }
     
     d("[initialize] Done", this);
+    
+    return this;
 };
 
 Network.prototype.initGlobalConstants = function (console) {
@@ -212,6 +221,8 @@ Virus.prototype.breakLinkAt = function (N1, N2) {
 }
 
 
+var virus   = new Virus();
+var network = new Network();
 
 var g = new Game(this);
 g.loop();
