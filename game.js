@@ -10,34 +10,34 @@ const SPACE_CHARACTER = " ";
 var d = (...items) => {
     let logText = items.map((x) => JSON.stringify(x)).join(SPACE_CHARACTER);    
     printErr(logText);
-}
+};
 
 
 /**
  * Node object
  */
-var Node = (id, reachable) => { 
+var Node = function(id, reachable) { 
     this.id         = id        || null;
-    this.reachable  = reachable || false;
     this.next       = new Set();
-}
-Node.prototype.isReachable = () => {
-    return this.reachable;
-}
-Node.prototype.linkTo = (N2) => {
+};
+
+Node.prototype.linkTo = function(N2) {
     this.next.add(N2);
     return this;
-}
+};
 
 
 /**
  * Game.JS
  */
-var Game = (context, options) => {
+var Game = function(context, options) {
     let opts    = options === undefined ? {} : options;
     let entries = opts.entries || {};
     
+    
     // Attributes 
+    this.hasEntriesProvidedAsOptions = (entries.length) ? true : false
+    
     this.N          = entries.N || null;       // the total number of nodes in the level, including the gateways
     this.L          = entries.L || null;       // the number of links
     this.E          = entries.E || null;       // the number of exit
@@ -57,7 +57,7 @@ var Game = (context, options) => {
              * Return the user intput as a single value
              * @return {Integer} 
              */
-            input:  function() {
+            input:  () => {
                 return parseInt(ctx.readline());    
             },
 
@@ -65,56 +65,57 @@ var Game = (context, options) => {
              * Return the user intput as a list of values
              * @return {Array[Integer]} 
              */
-            inputs: function() {
+            inputs: () => {
                 return ctx.readline().split(SPACE_CHARACTER).map((x) => { return parseInt(x); });
             },
         
         }
     }
-    this.console = opts.console || this.defaultInputReader(context);
+    this.console = opts.console || defaultInputReader(context);
+};
 
-    // Initializer 
-    let initialize = (entries) => {
-        if ( !entries.length ) { // No entries provided as options
-            // Assigning number of nodes, links and exit gateways
-            [this.N, this.L, this.E] = this.console.inputs();
-            d("Setting N,L,E", this);
-        
-            // Init nodes
-            this.nodes = new Set();
-            for (var i = 0; i < this.L; i++) {
-                let [N1, N2] = g.console.inputs();
-                let node = new Node(N1).LinkTo(N2);
-                d("Adding node", node)
-                this.nodes.add(node);    
-            }
+Game.prototype.initialize = function() {
+    let i;
+    
+    if ( !this.hasEntriesProvidedAsOptions ) { // No entries provided as options
+        // Assigning number of nodes, links and exit gateways
+        [this.N, this.L, this.E] = this.console.inputs();
+        d("Setting N,L,E", this);
+    
+        // Init nodes
+        this.nodes = new Set();
+        for (i = 0; i < this.L; i++) {
+            let [N1, N2] = g.console.inputs();
+            let node = new Node(N1);
+            this.nodes.add(node.linkTo(N2));
+            d("Adding node", node)    
         }
-        
-        for (var i = 0; i < g.E; i++) {
-            var EI = g.console.input(); // the index of a gateway node
-            d("EI", EI);
 
+        // Init gateways
+        this.gateways = new Set();
+        for (i = 0; i < this.E; i++) {
+            var EI = g.console.input(); // the index of a gateway node
+            d("Adding gateway", EI);
+            this.gateways.add(EI);
         }
     }
+};
+
+Game.prototype.loop = function() {
+    this.initialize();
     
-};
-
-};
-
+    // Game loop
+    while (true) {
+        var SI = this.console.input(); // The index of the node on which the Skynet agent is positioned this turn
+        d("Skynet agent position", SI);
+        
+        print('0 1'); // Example: 0 1 are the indices of the nodes you wish to sever the link between
+    }
+}
 
 var g = new Game(this);
 
 
 
 // game loop
-while (true) {
-    var SI = g.console.input(); // The index of the node on which the Skynet agent is positioned this turn
-    d("SI", SI);
-    // Write an action using print()
-    // To debug: printErr('Debug messages...');
-
-    print('0 1'); // Example: 0 1 are the indices of the nodes you wish to sever the link between
-}
-
-
-
+g.loop();
