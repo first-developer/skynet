@@ -14,14 +14,14 @@ var d = (...items) => {
 
 
 /**
- * Node object
+ * GNode object : Game Node
  */
-var Node = function(id, reachable) { 
+var GNode = function(id, reachable) { 
     this.id         = id        || null;
     this.next       = [];
 };
 
-Node.prototype.linkTo = function(N2) {
+GNode.prototype.linkTo = function(N2) {
     this.next.push(N2);
     return this;
 };
@@ -109,8 +109,8 @@ Network.prototype.initialize = function(options) {
         if ( this.console ) {
             this.initGlobalConstants();
             this.initNodes();
-            this.initLinks(console);
-            this.initGateways(console);    
+            this.initLinks();
+            this.initGateways();    
         } else {
             throw "NoConsoleProvidedError: You must set the 'console' options to be able to get user inputs";   
         }
@@ -122,9 +122,9 @@ Network.prototype.initialize = function(options) {
     return this;
 };
 
-Network.prototype.initGlobalConstants = function (console) {
+Network.prototype.initGlobalConstants = function () {
     d("[initGlobalConstants] Start");
-    [this.N, this.L, this.E] = console.inputs();
+    [this.N, this.L, this.E] = this.console.inputs();
     d("[initGlobalConstants] Done", "N="+this.N+" L="+this.L+" E="+this.E);
 }
 
@@ -132,17 +132,17 @@ Network.prototype.initNodes = function () {
     d("[initNodes] Start", this);
     this.nodes = [];
     for (let i = 0; i < this.N; i++) {
-        let node = new Node(i);
+        let node = new GNode(i);
         this.nodes.push(node);
         d("Adding node", node)    
     }
     d("[initNodes] Done", this.nodes);
 }
 
-Network.prototype.initLinks = function (console) {
+Network.prototype.initLinks = function () {
     d("[initGlobalConstants] Start");
     for (let i = 0; i < this.L; i++) {
-        let [N1, N2] = console.inputs();
+        let [N1, N2] = this.console.inputs();
         
         let node = this.nodes[N1];
         node.linkTo(N2)
@@ -151,11 +151,11 @@ Network.prototype.initLinks = function (console) {
     d("[initGlobalConstants] Done", this);
 }
 
-Network.prototype.initGateways = function (console) {
+Network.prototype.initGateways = function () {
     d("[initGateways] Start");
     this.gateways = new Set();
     for (i = 0; i < this.E; i++) {
-        var EI = console.input(); // the index of a gateway node
+        var EI = this.console.input(); // the index of a gateway node
         d("Adding gateway", EI);
         this.gateways.add(EI);
     }
@@ -186,9 +186,10 @@ Network.hasBeenInfectedBy = function (virus) {
 /**
  * Virus
  */
-var Virus = { 
-    infectedNetwork: null
+var Virus = function () {
+    this.infectedNetwork = null;
 };
+
 Virus.prototype.infects = function (network) {
     this.infectedNetwork = network;
 };
@@ -196,7 +197,7 @@ Virus.prototype.breakLinksFromAgentPos = function (pos) {
     let net;
 
     if (!this.infectedNetwork) { // No network infected
-        trow "MissingNetworkToInfectError: You nedd to infect a network first. use 'Virus.infect' method."
+        throw "MissingNetworkToInfectError: You nedd to infect a network first. use 'Virus.infect' method.";
     } else {
         net = this.infectedNetwork;
 
