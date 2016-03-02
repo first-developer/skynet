@@ -3,6 +3,11 @@
  * the standard input according to the problem statement.
  **/
 
+var d = function(...any){
+    printErr(JSON.stringify(any));    
+}
+
+
 var NetworkNode = function(id){
     this.id   = id;
     this.next = [];
@@ -28,41 +33,44 @@ var Virus = function(){
 };
 Virus.prototype.infects = function(network){
    this.targetNetwork = network;
+   return this;
 }
 Virus.prototype.brokeLinkBetween = function(N1, N2) {
     print([N1, N2].join(' '));
 }
 Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
+    d("brokeLinkOrTryTheOtherWay",node1, node2); 
     if ( node1.isLinkedTo(node2) ) {
-        this.brokeLinkBetween(node1, node2);       
+        this.brokeLinkBetween(node1.id, node2.id);       
     } else {
         if ( node2.isLinkedTo(node1) ) {
-            this.brokeLinkBetween(node2, node1);       
+            this.brokeLinkBetween(node2.id, node1.id);       
         }
     }
 }
 Virus.prototype.blocks = function(agentPosition){
     let i;
     let network = this.targetNetwork;
+    
     if ( !network ) {
         throw "NotNetworkFoundError: You need to infects a network first."       
     } 
-    printErr(JSON.stringify(network));
+    
     let nextAgentEventualMoves = network.nodeAt(agentPosition).next;
     for (i=0; i<nextAgentEventualMoves.length; i++) {
-        let n = nextAgentEventualMoves[i];
-        
-        let gate = network.gatewayAt(n);
-        if (gate) { // A gateway is found inside first neighbours
-            this.brokeLinkBetween(agentPosition, gate);
+        let n = nextAgentEventualMoves[i];  
+                        d("node", network.hasGateway(n)); 
+        if ( network.hasGateway(n) ) { // A gateway is found inside first neighbours
+            this.brokeLinkBetween(agentPosition, n);
             break;
         } else {
             // remove all links between the node and any existing gateway
-            for (i=0; i<network.gateways.length; i++) {
+            for (i=0; i<network.gateways.length; i++) { 
                 let g     = network.gateways[i];
-                let nNode = network.nodeAt(n); // node at indice 'n'
-                let gNode = network.nodeAt(g); // node at indice 'g'
-                
+
+                let gNode = network.nodeAt(g);   // node at indice 'g'
+                let nNode = network.nodeAt(n);      // node at indice 'n'
+                   
                 this.brokeLinkOrTryTheOtherWay(nNode, gNode);
             }
         }
@@ -93,11 +101,23 @@ Network.prototype.setupLinks = function(){
         this.nodeAt(N1).linkTo(N2);
     }
 };
-Network.prototype.nodeAt = function(id){
-    return this.nodes[id];
+Network.prototype.nodeAt = function(nodeId){
+    return this.nodes[nodeId];
 };
-Network.prototype.gatewayAt = function(position){
-    return this.gateways.find((id) => { return id === position; });    
+Network.prototype.gatewayAt = function(nodeId){   
+    if (this.hasGateway(nodeId)) {
+        return this.nodeAt(nodeId);
+    }
+    return //undefined
+};
+Network.prototype.hasGateway = function(nodeId){
+    for (let i=0; i<this.gateways.length; i++) {
+        if (nodeId == this.gateways[i]) {
+            return true;   
+        }
+    }
+    
+    return false
 };
 Network.prototype.setupNodes = function(){
     this.nodes = [];
@@ -124,10 +144,9 @@ Game.prototype.start = function(){
     let virus       = new Virus();
     let network     = new Network(this.N, this.L, this.E);
     
-    virus.infects(network); 
-    
     while (true) {
-        virus.within(network).blocks(skynetAgent.moving());
+        virus.infects(network)
+             .blocks(skynetAgent.moving());
     }
 };
 
