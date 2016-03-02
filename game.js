@@ -39,7 +39,6 @@ Virus.prototype.brokeLinkBetween = function(N1, N2) {
     print([N1, N2].join(' '));
 }
 Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
-    d("brokeLinkOrTryTheOtherWay",node1, node2); 
     if ( node1.isLinkedTo(node2) ) {
         this.brokeLinkBetween(node1.id, node2.id);       
     } else {
@@ -59,7 +58,7 @@ Virus.prototype.blocks = function(agentPosition){
     let nextAgentEventualMoves = network.nodeAt(agentPosition).next;
     for (i=0; i<nextAgentEventualMoves.length; i++) {
         let n = nextAgentEventualMoves[i];  
-                        d("node", network.hasGateway(n)); 
+        
         if ( network.hasGateway(n) ) { // A gateway is found inside first neighbours
             this.brokeLinkBetween(agentPosition, n);
             break;
@@ -103,6 +102,12 @@ Network.prototype.setupLinks = function(){
 };
 Network.prototype.nodeAt = function(nodeId){
     return this.nodes[nodeId];
+};
+Network.prototype.gatewayAt = function(nodeId){   
+    if (this.hasGateway(nodeId)) {
+        return this.nodeAt(nodeId);
+    }
+    return //undefined
 };
 Network.prototype.hasGateway = function(nodeId){
     for (let i=0; i<this.gateways.length; i++) {
