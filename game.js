@@ -1,12 +1,19 @@
 /**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
+ * ------------------------------------------
+ * Utils
+ * ------------------------------------------
+ */
 
 var d = function(...any){
     printErr(JSON.stringify(any));    
 }
 
+
+/**
+ * ------------------------------------------
+ * NetworkNode
+ * ------------------------------------------
+ */
 
 var NetworkNode = function(id){
     this.id   = id;
@@ -27,51 +34,85 @@ NetworkNode.prototype.isLinkedTo = function(node){
 };
  
  
-
+/**
+ * ------------------------------------------
+ * Agent
+ * ------------------------------------------
+ */
 var Agent = function(){};
 Agent.prototype.moving = function(){
     return parseInt(readline());
 }
 
 
+/**
+ * ------------------------------------------
+ * Virus
+ * ------------------------------------------
+ */
 var Virus = function(){
     this.targetNetwork       = null;
     this.currentAgentPosition = null;
 };
+
+
 Virus.prototype.infects = function(network){
    this.targetNetwork = network;
    return this;
 }
+
+
 Virus.prototype.brokeLinkBetween = function(N1, N2) {
+    //d("brokeLinkBetween", [N1, N2]);
     print([N1, N2].join(' '));
 }
+
+
 Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
+    
     if ( node1.isLinkedTo(node2) ) {
+        //d("recursiveBreak node1.isLinkedTo(node2):",node1.isLinkedTo(node2), node1, node2);   
         this.brokeLinkBetween(node1.id, node2.id);       
     } else {
         if ( node2.isLinkedTo(node1) ) {
+            ///d("recursiveBreak node2.isLinkedTo(node1):",node2.isLinkedTo(node1), node2, node1);   
             this.brokeLinkBetween(node2.id, node1.id);       
         }
     }
 }
+
+
 Virus.prototype.recursiveBreak = function(rest) {
-    let network = this.targetNetwork;
+    let n,
+        g,
+        network,
+        gNode,
+        nNode;
+    
+    network = this.targetNetwork;
     
     if (!rest.length) {
-        return    
+        nNode = network.nodeAt(this.currentAgentPosition); // node at indice 'n'
+        
+        // remove all links between the node and any existing gateway
+        for (i=0; i<network.gateways.length; i++) { 
+            g     = network.gateways[i];
+            gNode = network.nodeAt(g);   // node at indice 'g'
+            
+            //d("recursiveBreak ",i, g,nNode, gNode);   
+            this.brokeLinkOrTryTheOtherWay(nNode, gNode);
+        }
     } else {
-        let n = rest.shift();  
-        let nNode = network.nodeAt(n); // node at indice 'n'
+        n = rest.shift();  
+        nNode = network.nodeAt(n); // node at indice 'n'
         
         if ( network.hasGateway(n) ) { // A gateway is found inside first neighbours
             this.brokeLinkBetween(this.currentAgentPosition, n);
         } else {
             // remove all links between the node and any existing gateway
             for (i=0; i<network.gateways.length; i++) { 
-                let g     = network.gateways[i];
-    
-                let gNode = network.nodeAt(g);   // node at indice 'g'
-                
+                g     = network.gateways[i];
+                gNode = network.nodeAt(g);   // node at indice 'g'
                 
                 this.brokeLinkOrTryTheOtherWay(nNode, gNode);
             }
@@ -82,29 +123,41 @@ Virus.prototype.recursiveBreak = function(rest) {
     }
 };
 
+
 Virus.prototype.blocks = function(agentPosition){
     let i;
     let network = this.targetNetwork;
     this.currentAgentPosition = agentPosition;
 
+    //d("agentPosition", agentPosition);
+
     if ( !network ) {
         throw "NotNetworkFoundError: You need to infects a network first."       
     } 
 
-    d("currentAgentPosition", this.currentAgentPosition);
+    //d("currentAgentPosition", this.currentAgentPosition);
 
     let nextAgentEventualMoves = network.nodeAt(this.currentAgentPosition).next.sort();
-    
+    //d("nextAgentEventualMoves", nextAgentEventualMoves);
+    ///d("nextAgentEventualMoves", network);
     this.recursiveBreak(nextAgentEventualMoves);
     
     return this;    
 };
+
+
 Virus.prototype.within = function(network){
     this.targetNetwork = network;    
     return this;
 };
 
 
+
+/**
+ * ------------------------------------------
+ * Network
+ * ------------------------------------------
+ */
 var Network = function(N, L, E){
     
     this.nodes    = null;
@@ -158,6 +211,12 @@ Network.prototype.setupGateways = function(){
 };
 
 
+
+/**
+ * ------------------------------------------
+ * Game
+ * ------------------------------------------
+ */
 var Game = function(){
     [this.N, this.L, this.E] = readline().split(' ');
 };
