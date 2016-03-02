@@ -16,8 +16,14 @@ NetworkNode.prototype.linkTo = function(nodeId){
     this.next.push(nodeId);    
 };
 NetworkNode.prototype.isLinkedTo = function(node){
-    let linked = this.next.find((n) => { return n === node.id });    
-    return (linked !== undefined);
+    for (let i=0; i<this.next.length; i++) {
+        let nextNode = this.next[i];
+        if (node.id == nextNode) {
+            return true;   
+        }
+    }
+    
+    return false;
 };
  
  
@@ -69,7 +75,7 @@ Virus.prototype.blocks = function(agentPosition){
 
                 let gNode = network.nodeAt(g);   // node at indice 'g'
                 let nNode = network.nodeAt(n);      // node at indice 'n'
-                   
+                
                 this.brokeLinkOrTryTheOtherWay(nNode, gNode);
             }
         }
@@ -97,7 +103,7 @@ var Network = function(N, L, E){
 Network.prototype.setupLinks = function(){
     for (let i = 0; i < this.L; i++) {
         let [N1, N2] = readline().split(' '); 
-        this.nodeAt(N1).linkTo(N2);
+        this.nodeAt(parseInt(N1)).linkTo(parseInt(N2));
     }
 };
 Network.prototype.nodeAt = function(nodeId){
@@ -116,8 +122,9 @@ Network.prototype.hasGateway = function(nodeId){
         }
     }
     
-    return false
+    return false;
 };
+
 Network.prototype.setupNodes = function(){
     this.nodes = [];
     
