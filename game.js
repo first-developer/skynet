@@ -26,7 +26,19 @@ Virus.prototype.infects = function(network){
    this.targetNetwork = network;
 }
 Virus.prototype.block = function(agentPosition){
-    print('1 2');
+    let network = this.targetNetwork;
+    if ( !network ) {
+        throw "NotNetworkFoundError: You need to infects a network first."       
+    } 
+    
+    let nextAgentEventualMoves = network.nodeAt(agentPosition).next;
+    nextAgentEventualMoves.forEach((x) => {
+        //let gate = network.gatewayAt(x)
+        //if 
+    });
+    
+    
+    
     return this;    
 };
 Virus.prototype.within = function(network){
@@ -43,11 +55,14 @@ var Network = function(N, L, E){
 Network.prototype.setupLinks = function(){
     for (let i = 0; i < this.L; i++) {
         let [N1, N2] = readline().split(' '); 
-        this.Node(N1).linkTo(N2);
+        this.nodeAt(N1).linkTo(N2);
     }
 };
-Network.prototype.Node = function(id){
+Network.prototype.nodeAt = function(id){
     return this.nodes[id];
+};
+Network.prototype.gatewayAt(position){
+    return this.gateways.find((id) => { id == pos });    
 };
 Network.prototype.setupNodes = function(){
     this.nodes = [];
@@ -57,7 +72,7 @@ Network.prototype.setupNodes = function(){
     }
 };
 Network.prototype.setupGateways = function(){
-    this.gateways = new Set();
+    this.gateways = [];
     
     for (let i = 0; i < this.E; i++) {
         let EI = parseInt(readline()); 
