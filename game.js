@@ -33,7 +33,7 @@ Virus.prototype.brokeLinkBetween = function(N1, N2) {
     print([N1, N2].join(' '));
 }
 Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
-    if ( node1.isLinkedTo(node2gNode) ) {
+    if ( node1.isLinkedTo(node2) ) {
         this.brokeLinkBetween(node1, node2);       
     } else {
         if ( node2.isLinkedTo(node1) ) {
@@ -41,13 +41,13 @@ Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
         }
     }
 }
-Virus.prototype.block = function(agentPosition){
+Virus.prototype.blocks = function(agentPosition){
     let i;
     let network = this.targetNetwork;
     if ( !network ) {
         throw "NotNetworkFoundError: You need to infects a network first."       
     } 
-    
+    printErr(JSON.stringify(network));
     let nextAgentEventualMoves = network.nodeAt(agentPosition).next;
     for (i=0; i<nextAgentEventualMoves.length; i++) {
         let n = nextAgentEventualMoves[i];
@@ -77,8 +77,14 @@ Virus.prototype.within = function(network){
 
 
 var Network = function(N, L, E){
-    this.setupLinks();
+    
+    this.nodes    = null;
+    this.gateways = null;
+    
+    [this.N, this.L, this.E] = [N, L, E];
+    
     this.setupNodes();
+    this.setupLinks();
     this.setupGateways();
 };
 Network.prototype.setupLinks = function(){
@@ -90,8 +96,8 @@ Network.prototype.setupLinks = function(){
 Network.prototype.nodeAt = function(id){
     return this.nodes[id];
 };
-Network.prototype.gatewayAt(position){
-    return this.gateways.find((id) => { return id === pos; });    
+Network.prototype.gatewayAt = function(position){
+    return this.gateways.find((id) => { return id === position; });    
 };
 Network.prototype.setupNodes = function(){
     this.nodes = [];
@@ -105,7 +111,7 @@ Network.prototype.setupGateways = function(){
     
     for (let i = 0; i < this.E; i++) {
         let EI = parseInt(readline()); 
-        this.gateways.add(EI);
+        this.gateways.push(EI);
     }
 };
 
@@ -116,12 +122,12 @@ var Game = function(){
 Game.prototype.start = function(){
     let skynetAgent = new Agent();
     let virus       = new Virus();
-    let network     = new Network();
+    let network     = new Network(this.N, this.L, this.E);
     
     virus.infects(network); 
     
     while (true) {
-        virus.within(network).block(skynetAgent.moving());
+        virus.within(network).blocks(skynetAgent.moving());
     }
 };
 
