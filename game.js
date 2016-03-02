@@ -4,7 +4,7 @@
  **/
 
 var NetworkNode = function(id){
-    this.id   = null;
+    this.id   = id;
     this.next = [];
 };
 NetworkNode.prototype.linkTo = function(nodeId){
