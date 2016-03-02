@@ -19,9 +19,20 @@ var NetworkNode = function(id){
     this.id   = id;
     this.next = [];
 };
+
+/**
+ * Add a node ID to the list of self's neighbours
+ * @param  {Integer} nodeId 
+ */
 NetworkNode.prototype.linkTo = function(nodeId){
     this.next.push(nodeId);    
 };
+
+/**
+ * Check if the given node has its ID as a neighbour
+ * @param  {NetworkNode}  node 
+ * @return {Boolean}     
+ */
 NetworkNode.prototype.isLinkedTo = function(node){
     for (let i=0; i<this.next.length; i++) {
         let nextNode = this.next[i];
@@ -40,6 +51,11 @@ NetworkNode.prototype.isLinkedTo = function(node){
  * ------------------------------------------
  */
 var Agent = function(){};
+
+/**
+ * Return the new position of the Agent.
+ * @return {int} The agent position
+ */
 Agent.prototype.moving = function(){
     return parseInt(readline());
 }
@@ -55,33 +71,50 @@ var Virus = function(){
     this.currentAgentPosition = null;
 };
 
-
+/**
+ * Set the reference of the network to the Virus.
+ * @param {Network} network
+ * @return self
+ */
 Virus.prototype.infects = function(network){
    this.targetNetwork = network;
    return this;
 }
 
-
+/**
+ * Show the result output as describe in the instructions 
+ * It actually break the link between the nodes with the given IDs. 
+ * @param {Interger} N1
+ * @param {Interger} N2
+ */
 Virus.prototype.brokeLinkBetween = function(N1, N2) {
-    //d("brokeLinkBetween", [N1, N2]);
     print([N1, N2].join(' '));
 }
 
-
+/**
+ * Break to node by checking in which order it has to be done.
+ * It is related the link order between the two nodes.
+ * 
+ * @param  {NetworkNode} node1
+ * @param  {NetworkNode} node2
+ */
 Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
     
     if ( node1.isLinkedTo(node2) ) {
-        //d("recursiveBreak node1.isLinkedTo(node2):",node1.isLinkedTo(node2), node1, node2);   
         this.brokeLinkBetween(node1.id, node2.id);       
     } else {
         if ( node2.isLinkedTo(node1) ) {
-            ///d("recursiveBreak node2.isLinkedTo(node1):",node2.isLinkedTo(node1), node2, node1);   
             this.brokeLinkBetween(node2.id, node1.id);       
         }
     }
 }
 
-
+/**
+ * Break the link between the Agent an any other nodes, gateways and neighbours
+ * to revent the Agent to reached the gateway.
+ * 
+ * @param  {[Integer]} rest : les list of neighbours node IDs of a node.
+ */
 Virus.prototype.recursiveBreak = function(rest) {
     let n,
         g,
@@ -99,7 +132,6 @@ Virus.prototype.recursiveBreak = function(rest) {
             g     = network.gateways[i];
             gNode = network.nodeAt(g);   // node at indice 'g'
             
-            //d("recursiveBreak ",i, g,nNode, gNode);   
             this.brokeLinkOrTryTheOtherWay(nNode, gNode);
         }
     } else {
@@ -119,33 +151,40 @@ Virus.prototype.recursiveBreak = function(rest) {
         }
         
         this.recursiveBreak(rest);
-        this.recursiveBreak(nNode.next);
+        this.recursiveBreak(nNode.next); // Try also on neighbours.
     }
 };
 
-
+/**
+ * Appl ythe algorithm to stop the Agent
+ * 
+ * @param  {Integer} agentPosition 
+ * @return self
+ */
 Virus.prototype.blocks = function(agentPosition){
     let i;
     let network = this.targetNetwork;
     this.currentAgentPosition = agentPosition;
 
-    //d("agentPosition", agentPosition);
-
     if ( !network ) {
         throw "NotNetworkFoundError: You need to infects a network first."       
     } 
 
-    //d("currentAgentPosition", this.currentAgentPosition);
-
     let nextAgentEventualMoves = network.nodeAt(this.currentAgentPosition).next.sort();
-    //d("nextAgentEventualMoves", nextAgentEventualMoves);
-    ///d("nextAgentEventualMoves", network);
+    
     this.recursiveBreak(nextAgentEventualMoves);
     
     return this;    
 };
 
 
+/**
+ * Internal DSL method to clearify the purpose of the Virus.
+ * This method keep track of the network using an attribute.
+ * 
+ * @param  {Network} network 
+ * @return self
+ */
 Virus.prototype.within = function(network){
     this.targetNetwork = network;    
     return this;
@@ -169,31 +208,17 @@ var Network = function(N, L, E){
     this.setupLinks();
     this.setupGateways();
 };
+
+// Setup Links using user initial data.
 Network.prototype.setupLinks = function(){
     for (let i = 0; i < this.L; i++) {
         let [N1, N2] = readline().split(' '); 
         this.nodeAt(parseInt(N1)).linkTo(parseInt(N2));
     }
 };
-Network.prototype.nodeAt = function(nodeId){
-    return this.nodes[nodeId];
-};
-Network.prototype.gatewayAt = function(nodeId){   
-    if (this.hasGateway(nodeId)) {
-        return this.nodeAt(nodeId);
-    }
-    return //undefined
-};
-Network.prototype.hasGateway = function(nodeId){
-    for (let i=0; i<this.gateways.length; i++) {
-        if (nodeId == this.gateways[i]) {
-            return true;   
-        }
-    }
-    
-    return false;
-};
 
+
+// Setup Nodes using user initial data.
 Network.prototype.setupNodes = function(){
     this.nodes = [];
     
@@ -201,6 +226,8 @@ Network.prototype.setupNodes = function(){
         this.nodes.push(new NetworkNode(i));
     }
 };
+
+// Setup Gateways using user initial data.
 Network.prototype.setupGateways = function(){
     this.gateways = [];
     
@@ -213,6 +240,38 @@ Network.prototype.setupGateways = function(){
 
 
 /**
+ * Return the NetworkNode object from a node ID
+ * 
+ * @param  {Integer} nodeId 
+ * @return {NetworkNode} node of id : nodeId
+ */
+Network.prototype.nodeAt = function(nodeId){
+    return this.nodes[nodeId];
+};
+Network.prototype.gatewayAt = function(nodeId){   
+    if (this.hasGateway(nodeId)) {
+        return this.nodeAt(nodeId);
+    }
+    return //undefined
+};
+
+/**
+ * Check if the given node represent a network Gateway.
+ * 
+ * @param  {Integer} nodeId 
+ * @return {Boolean}
+ */
+Network.prototype.hasGateway = function(nodeId){
+    for (let i=0; i<this.gateways.length; i++) {
+        if (nodeId == this.gateways[i]) {
+            return true;   
+        }
+    }
+    
+    return false;
+};
+
+/**
  * ------------------------------------------
  * Game
  * ------------------------------------------
@@ -220,6 +279,10 @@ Network.prototype.setupGateways = function(){
 var Game = function(){
     [this.N, this.L, this.E] = readline().split(' ');
 };
+
+/**
+ * Launch the game. (game loop)
+ */
 Game.prototype.start = function(){
     let skynetAgent = new Agent();
     let virus       = new Virus();
