@@ -14,7 +14,7 @@ NetworkNode.prototype.linkTo = function(node){
  
 
 var Agent = function(){};
-Agent.prototype.move = function(){
+Agent.prototype.moving = function(){
     return parseInt(readline());
 }
 
@@ -25,7 +25,7 @@ var Virus = function(){
 Virus.prototype.infects = function(network){
    this.targetNetwork = network;
 }
-Virus.prototype.block   = function(agent){
+Virus.prototype.block = function(agentPosition){
     print('1 2');
     return this;    
 };
@@ -77,7 +77,7 @@ Game.prototype.start = function(){
     virus.infects(network); 
     
     while (true) {
-        virus.within(network).block(skynetAgent);
+        virus.within(network).block(skynetAgent.moving());
     }
 };
 
@@ -86,3 +86,4 @@ Game.prototype.start = function(){
 //////////
 var game = new Game();
 game.start();
+
