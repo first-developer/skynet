@@ -104,12 +104,6 @@ Network.prototype.setupLinks = function(){
 Network.prototype.nodeAt = function(nodeId){
     return this.nodes[nodeId];
 };
-Network.prototype.gatewayAt = function(nodeId){   
-    if (this.hasGateway(nodeId)) {
-        return this.nodeAt(nodeId);
-    }
-    return //undefined
-};
 Network.prototype.hasGateway = function(nodeId){
     for (let i=0; i<this.gateways.length; i++) {
         if (nodeId == this.gateways[i]) {
