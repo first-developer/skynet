@@ -35,7 +35,8 @@ Agent.prototype.moving = function(){
 
 
 var Virus = function(){
-    this.targetNetwork = null;
+    this.targetNetwork       = null;
+    this.currentAgentPosition = null;
 };
 Virus.prototype.infects = function(network){
    this.targetNetwork = network;
@@ -53,7 +54,7 @@ Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
         }
     }
 }
-Virus.prototype.recursiveBreak = function(agentPosition, rest) {
+Virus.prototype.recursiveBreak = function(rest) {
     let network = this.targetNetwork;
     
     if (!rest.length) {
@@ -63,7 +64,7 @@ Virus.prototype.recursiveBreak = function(agentPosition, rest) {
         let nNode = network.nodeAt(n); // node at indice 'n'
         
         if ( network.hasGateway(n) ) { // A gateway is found inside first neighbours
-            this.brokeLinkBetween(agentPosition, n);
+            this.brokeLinkBetween(this.currentAgentPosition, n);
         } else {
             // remove all links between the node and any existing gateway
             for (i=0; i<network.gateways.length; i++) { 
@@ -76,22 +77,25 @@ Virus.prototype.recursiveBreak = function(agentPosition, rest) {
             }
         }
         
-        this.recursiveBreak(agentPosition, rest);
-        this.recursiveBreak(agentPosition, nNode.next);
+        this.recursiveBreak(rest);
+        this.recursiveBreak(nNode.next);
     }
 };
 
 Virus.prototype.blocks = function(agentPosition){
     let i;
     let network = this.targetNetwork;
-    
+    this.currentAgentPosition = agentPosition;
+
     if ( !network ) {
         throw "NotNetworkFoundError: You need to infects a network first."       
     } 
-    d("agentPosition", agentPosition);
-    let nextAgentEventualMoves = network.nodeAt(agentPosition).next.sort();
+
+    d("currentAgentPosition", this.currentAgentPosition);
+
+    let nextAgentEventualMoves = network.nodeAt(this.currentAgentPosition).next.sort();
     
-    this.recursiveBreak(agentPosition, nextAgentEventualMoves);
+    this.recursiveBreak(nextAgentEventualMoves);
     
     return this;    
 };
