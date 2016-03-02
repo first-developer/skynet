@@ -32,6 +32,15 @@ Virus.prototype.infects = function(network){
 Virus.prototype.brokeLinkBetween = function(N1, N2) {
     print([N1, N2].join(' '));
 }
+Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
+    if ( node1.isLinkedTo(node2gNode) ) {
+        this.brokeLinkBetween(node1, node2);       
+    } else {
+        if ( node2.isLinkedTo(node1) ) {
+            this.brokeLinkBetween(node2, node1);       
+        }
+    }
+}
 Virus.prototype.block = function(agentPosition){
     let i;
     let network = this.targetNetwork;
@@ -54,13 +63,7 @@ Virus.prototype.block = function(agentPosition){
                 let nNode = network.nodeAt(n); // node at indice 'n'
                 let gNode = network.nodeAt(g); // node at indice 'g'
                 
-                if ( nNode.isLinkedTo(gNode) ) {
-                    this.brokeLinkBetween(nNode, gNode);       
-                } else {
-                    if ( gNode.isLinkedTo(nNode) ) {
-                        this.brokeLinkBetween(gNode, nNode);       
-                    }
-                }
+                this.brokeLinkOrTryTheOtherWay(nNode, gNode);
             }
         }
     }
