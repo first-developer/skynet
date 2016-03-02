@@ -53,6 +53,34 @@ Virus.prototype.brokeLinkOrTryTheOtherWay = function(node1, node2) {
         }
     }
 }
+Virus.prototype.recursiveBreak = function(agentPosition, rest) {
+    let network = this.targetNetwork;
+    
+    if (!rest.length) {
+        return    
+    } else {
+        let n = rest.shift();  
+        let nNode = network.nodeAt(n); // node at indice 'n'
+        
+        if ( network.hasGateway(n) ) { // A gateway is found inside first neighbours
+            this.brokeLinkBetween(agentPosition, n);
+        } else {
+            // remove all links between the node and any existing gateway
+            for (i=0; i<network.gateways.length; i++) { 
+                let g     = network.gateways[i];
+    
+                let gNode = network.nodeAt(g);   // node at indice 'g'
+                
+                
+                this.brokeLinkOrTryTheOtherWay(nNode, gNode);
+            }
+        }
+        
+        this.recursiveBreak(agentPosition, rest);
+        this.recursiveBreak(agentPosition, nNode.next);
+    }
+};
+
 Virus.prototype.blocks = function(agentPosition){
     let i;
     let network = this.targetNetwork;
@@ -60,26 +88,10 @@ Virus.prototype.blocks = function(agentPosition){
     if ( !network ) {
         throw "NotNetworkFoundError: You need to infects a network first."       
     } 
+    d("agentPosition", agentPosition);
+    let nextAgentEventualMoves = network.nodeAt(agentPosition).next.sort();
     
-    let nextAgentEventualMoves = network.nodeAt(agentPosition).next;
-    for (i=0; i<nextAgentEventualMoves.length; i++) {
-        let n = nextAgentEventualMoves[i];  
-        
-        if ( network.hasGateway(n) ) { // A gateway is found inside first neighbours
-            this.brokeLinkBetween(agentPosition, n);
-            break;
-        } else {
-            // remove all links between the node and any existing gateway
-            for (i=0; i<network.gateways.length; i++) { 
-                let g     = network.gateways[i];
-
-                let gNode = network.nodeAt(g);   // node at indice 'g'
-                let nNode = network.nodeAt(n);      // node at indice 'n'
-                
-                this.brokeLinkOrTryTheOtherWay(nNode, gNode);
-            }
-        }
-    }
+    this.recursiveBreak(agentPosition, nextAgentEventualMoves);
     
     return this;    
 };
